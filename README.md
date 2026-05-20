@@ -72,6 +72,13 @@ cd src/ingestion/cloud_functions/bicing_collector
 functions-framework --target=bicing_collector
 ```
 
+`--debug` enables hot reload on code changes but may cause issues on Windows. Omit it if the server restarts in a loop.
+
+Test the running function:
+```bash
+curl -X POST http://localhost:8080
+```
+
 ## Data Sources
 
 - **Bicing (Santiago)**: `https://santiago.publicbikesystem.net/customer/gbfs/v3.0/gbfs.json`
