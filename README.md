@@ -46,7 +46,8 @@ tests/                           Unit and integration tests
 1. Copy `terraform/terraform.tfvars.example` to `terraform/terraform.tfvars` and fill in your values.
 2. Create the Terraform state bucket manually (required before `terraform init`):
    ```bash
-   gcloud storage buckets create gs://YOUR_PROJECT_ID-tfstate --location=southamerica-west1
+   gcloud storage buckets create gs://YOUR_PROJECT_ID-tfstate \
+     --location=southamerica-west1 --uniform-bucket-level-access
    ```
 3. Update `backend "gcs"` bucket name in `terraform/main.tf`.
 
@@ -68,7 +69,7 @@ Cloud Functions are deployed automatically via Terraform from zipped source in G
 ```bash
 pip install -r requirements.txt
 cd src/ingestion/cloud_functions/bicing_collector
-functions-framework --target=bicing_collector --debug
+functions-framework --target=bicing_collector
 ```
 
 ## Data Sources
