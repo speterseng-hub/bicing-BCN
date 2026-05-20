@@ -2,11 +2,16 @@ import json
 import logging
 import os
 from datetime import datetime, timezone
-from dotenv import load_dotenv
+
 import functions_framework
 import requests
 from google.cloud import pubsub_v1
-load_dotenv()
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 logger = logging.getLogger(__name__)
 
 PUBSUB_TOPIC = os.environ.get("PUBSUB_TOPIC", "bicing-raw-data")
