@@ -40,3 +40,6 @@ Thumbs.db
 
 # Cloud Function zips
 *.zip
+
+# Claude Code
+CLAUDE.md
