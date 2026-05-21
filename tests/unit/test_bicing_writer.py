@@ -2,9 +2,10 @@ from src.ingestion.cloud_functions.bicing_writer.main import _build_gcs_path
 
 
 class TestBuildGcsPath:
-    def test_uses_collected_at_timestamp(self):
+    def test_uses_collected_at_timestamp_in_santiago_time(self):
+        # 2024-06-15T08:30:00 UTC = 2024-06-15T04:30:00 America/Santiago (UTC-4, winter)
         path = _build_gcs_path("2024-06-15T08:30:00+00:00")
-        assert path == "bicing/2024/06/15/08/bicing_20240615_083000.json"
+        assert path == "bicing/2024/06/15/04/bicing_20240615_043000.json"
 
     def test_falls_back_to_now_on_invalid_timestamp(self):
         path = _build_gcs_path("not-a-date")

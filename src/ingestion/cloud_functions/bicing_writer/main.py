@@ -3,6 +3,7 @@ import json
 import logging
 import os
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 import functions_framework
 from google.cloud import storage
@@ -10,6 +11,7 @@ from google.cloud import storage
 logger = logging.getLogger(__name__)
 
 RAW_BUCKET = os.environ.get("RAW_BUCKET", "proyecto-bicing-raw")
+LOCAL_TZ = ZoneInfo("America/Santiago")
 
 
 def _build_gcs_path(collected_at: str | None = None) -> str:
@@ -21,9 +23,10 @@ def _build_gcs_path(collected_at: str | None = None) -> str:
     else:
         ts = datetime.now(timezone.utc)
 
+    ts_local = ts.astimezone(LOCAL_TZ)
     return (
-        f"bicing/{ts.strftime('%Y/%m/%d/%H')}/"
-        f"bicing_{ts.strftime('%Y%m%d_%H%M%S')}.json"
+        f"bicing/{ts_local.strftime('%Y/%m/%d/%H')}/"
+        f"bicing_{ts_local.strftime('%Y%m%d_%H%M%S')}.json"
     )
 
 

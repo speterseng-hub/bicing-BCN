@@ -1,7 +1,7 @@
-# Bicing Barcelona — Data Engineering Pipeline
+# Bicing — Data Engineering Pipeline
 
-End-to-end GCP data pipeline for real-time ingestion and analysis of Barcelona's
-Bicing bike-sharing system data.
+End-to-end GCP data pipeline for real-time ingestion and analysis of
+GBFS-compliant bike-sharing system data. Currently targeting Santiago de Chile.
 
 ## Architecture
 
