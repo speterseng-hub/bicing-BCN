@@ -1,0 +1,17 @@
+project_id: YOUR_PROJECT_ID
+region: southamerica-west1
+
+gcs:
+  raw_bucket: proyecto-bicing-raw
+  cf_source_bucket: YOUR_PROJECT_ID-cf-source
+
+pubsub:
+  topic: bicing-raw-data
+  dead_letter_topic: bicing-raw-data-dead-letter
+  subscription: bicing-writer-sub
+
+bigquery:
+  dataset: bicing_analytics
+  tables:
+    raw: bicing_raw
+    stations: bicing_stations

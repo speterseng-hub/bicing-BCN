@@ -1,0 +1,6 @@
+bicing_gbfs:
+  discovery_url: https://santiago.publicbikesystem.net/customer/gbfs/v3.0/gbfs.json
+  feeds:
+    - station_status
+    - station_information
+  timeout_seconds: 10
