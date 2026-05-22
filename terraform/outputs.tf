@@ -22,3 +22,18 @@ output "writer_sa_email" {
   description = "Service account email for bicing_writer"
   value       = google_service_account.writer.email
 }
+
+output "dataflow_bucket_url" {
+  description = "GCS URL of the Dataflow staging/temp/template bucket"
+  value       = "gs://${google_storage_bucket.dataflow.name}"
+}
+
+output "artifact_registry_repo" {
+  description = "Artifact Registry repository for Dataflow Flex Template images"
+  value       = "${var.region}-docker.pkg.dev/${var.project_id}/bicing-dataflow"
+}
+
+output "dataflow_worker_sa_email" {
+  description = "Service account email for Dataflow worker"
+  value       = google_service_account.dataflow_worker.email
+}

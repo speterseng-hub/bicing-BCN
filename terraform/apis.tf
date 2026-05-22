@@ -9,6 +9,7 @@ locals {
     "storage.googleapis.com",
     "bigquery.googleapis.com",
     "iam.googleapis.com",
+    "dataflow.googleapis.com",
   ]
 }
 

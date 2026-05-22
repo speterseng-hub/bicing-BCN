@@ -64,3 +64,80 @@ resource "google_cloud_run_service_iam_member" "pubsub_run_invoker" {
   role     = "roles/run.invoker"
   member   = "serviceAccount:${google_service_account.writer.email}"
 }
+
+# ── ETL trigger SA — launches Dataflow jobs and reads GCS ─────────────────────
+
+resource "google_service_account" "etl_trigger" {
+  account_id   = "bicing-etl-trigger-sa"
+  display_name = "Bicing ETL Trigger — launches Dataflow Flex Template jobs"
+}
+
+# launch Dataflow jobs
+resource "google_project_iam_member" "etl_trigger_dataflow_developer" {
+  project = var.project_id
+  role    = "roles/dataflow.developer"
+  member  = "serviceAccount:${google_service_account.etl_trigger.email}"
+}
+
+# Dataflow worker SA needs to be impersonated by the trigger SA
+resource "google_service_account_iam_member" "etl_trigger_act_as_worker" {
+  service_account_id = google_service_account.dataflow_worker.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.etl_trigger.email}"
+}
+
+# ── Dataflow worker SA — runs the actual pipeline ─────────────────────────────
+
+resource "google_service_account" "dataflow_worker" {
+  account_id   = "bicing-dataflow-worker-sa"
+  display_name = "Bicing Dataflow Worker — executes ETL pipelines"
+}
+
+# read raw GCS files
+resource "google_storage_bucket_iam_member" "dataflow_worker_raw_reader" {
+  bucket = google_storage_bucket.raw.name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${google_service_account.dataflow_worker.email}"
+}
+
+# read/write Dataflow staging and temp bucket
+resource "google_storage_bucket_iam_member" "dataflow_worker_staging" {
+  bucket = google_storage_bucket.dataflow.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_service_account.dataflow_worker.email}"
+}
+
+# write to BigQuery
+resource "google_bigquery_dataset_iam_member" "dataflow_worker_bq" {
+  dataset_id = google_bigquery_dataset.analytics.dataset_id
+  role       = "roles/bigquery.dataEditor"
+  member     = "serviceAccount:${google_service_account.dataflow_worker.email}"
+}
+
+# Dataflow worker needs Dataflow worker role
+resource "google_project_iam_member" "dataflow_worker_role" {
+  project = var.project_id
+  role    = "roles/dataflow.worker"
+  member  = "serviceAccount:${google_service_account.dataflow_worker.email}"
+}
+
+# ── ETL Scheduler SA — invokes the trigger Cloud Functions ────────────────────
+
+resource "google_service_account" "etl_scheduler" {
+  account_id   = "bicing-etl-scheduler-sa"
+  display_name = "Bicing ETL Scheduler — invokes ETL trigger CFs"
+}
+
+resource "google_cloudfunctions2_function_iam_member" "etl_scheduler_invoker" {
+  location       = var.region
+  cloud_function = google_cloudfunctions2_function.etl_trigger.name
+  role           = "roles/cloudfunctions.invoker"
+  member         = "serviceAccount:${google_service_account.etl_scheduler.email}"
+}
+
+resource "google_cloud_run_service_iam_member" "etl_scheduler_run_invoker" {
+  location = var.region
+  service  = google_cloudfunctions2_function.etl_trigger.name
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${google_service_account.etl_scheduler.email}"
+}
