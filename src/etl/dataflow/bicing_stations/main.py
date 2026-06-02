@@ -6,7 +6,7 @@ import logging
 import apache_beam as beam
 import requests
 from apache_beam.io.gcp.bigquery import WriteToBigQuery, BigQueryDisposition
-from apache_beam.options.pipeline_options import PipelineOptions, StandardOptions
+from apache_beam.options.pipeline_options import GoogleCloudOptions, PipelineOptions, StandardOptions
 
 logger = logging.getLogger(__name__)
 
@@ -50,9 +50,14 @@ class FetchStations(beam.DoFn):
             return
 
         for s in stations:
+            names = s.get("name") or []
+            name = (
+                next((n["text"] for n in names if n["language"] == "es"), None)
+                or next((n["text"] for n in names if n["language"] == "en"), None)
+            )
             yield {
                 "station_id": str(s["station_id"]),
-                "name": s.get("name"),
+                "name": name,
                 "address": s.get("address"),
                 "lat": s.get("lat"),
                 "lon": s.get("lon"),
@@ -65,15 +70,16 @@ class FetchStations(beam.DoFn):
 
 def run(argv=None):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--project", required=True)
+#   parser.add_argument("--project", required=True)
     parser.add_argument("--bq_dataset", required=True)
     parser.add_argument("--discovery_url", default=GBFS_DISCOVERY_URL)
     known_args, pipeline_args = parser.parse_known_args(argv)
 
-    bq_table = f"{known_args.project}:{known_args.bq_dataset}.bicing_stations"
 
     options = PipelineOptions(pipeline_args)
     options.view_as(StandardOptions).runner = options.view_as(StandardOptions).runner or "DataflowRunner"
+    project = options.view_as(GoogleCloudOptions).project
+    bq_table = f"{project}:{known_args.bq_dataset}.bicing_stations"
 
     with beam.Pipeline(options=options) as p:
         (
