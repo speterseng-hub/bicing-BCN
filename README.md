@@ -27,7 +27,9 @@ BigQuery: bicing_analytics         ← queryable warehouse
 ## Project Structure
 
 ```
-src/ingestion/cloud_functions/   Cloud Functions source code
+src/ingestion/cloud_functions/   Cloud Functions source code (collector, writer)
+src/etl/dataflow/                Dataflow Flex Templates (bicing_etl, bicing_stations)
+src/etl/cloud_functions/         ETL trigger Cloud Functions
 terraform/                       Infrastructure as Code (GCP resources)
 config/                          Environment configuration
 tests/                           Unit and integration tests
@@ -77,6 +79,45 @@ functions-framework --target=bicing_collector
 Test the running function:
 ```bash
 curl -X POST http://localhost:8080
+```
+
+### Run ETL pipelines locally
+
+Both pipelines use `DirectRunner` for local execution and write directly to BigQuery.
+
+**Station metadata** (run once, or when station data changes):
+```bash
+python src/etl/dataflow/bicing_stations/main.py \
+  --project=YOUR_PROJECT_ID \
+  --bucket=proyecto-bicing-raw \
+  --bq_dataset=bicing_analytics \
+  --runner=DirectRunner \
+  --temp_location=gs://proyecto-bicing-raw/tmp
+```
+
+**Hourly availability** (processes one UTC hour of GCS files):
+```bash
+python src/etl/dataflow/bicing_etl/main.py \
+  --project=YOUR_PROJECT_ID \
+  --bucket=proyecto-bicing-raw \
+  --bq_dataset=bicing_analytics \
+  --runner=DirectRunner \
+  --temp_location=gs://proyecto-bicing-raw/tmp \
+  --hour_utc=2026-06-01T03
+```
+
+`--hour_utc` defaults to the previous hour if omitted. `--temp_location` is required for the BQ file-load method even with `DirectRunner`.
+
+### Query BigQuery
+
+```bash
+# Latest availability rows
+bq query --use_legacy_sql=false \
+  "SELECT * FROM \`YOUR_PROJECT_ID.bicing_analytics.bicing_raw\` ORDER BY timestamp DESC LIMIT 10"
+
+# Station metadata
+bq query --use_legacy_sql=false \
+  "SELECT * FROM \`YOUR_PROJECT_ID.bicing_analytics.bicing_stations\` LIMIT 10"
 ```
 
 ## Data Sources
