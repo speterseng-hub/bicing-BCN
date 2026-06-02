@@ -75,8 +75,9 @@ resource "google_cloudfunctions2_function" "etl_trigger" {
       GCP_REGION            = var.region
       RAW_BUCKET            = var.raw_bucket_name
       BQ_DATASET            = var.bq_dataset
-      ETL_TEMPLATE_IMAGE    = "gs://${google_storage_bucket.dataflow.name}/templates/bicing_etl.json"
+      ETL_TEMPLATE_IMAGE     = "gs://${google_storage_bucket.dataflow.name}/templates/bicing_etl.json"
       DATAFLOW_TEMP_LOCATION = "gs://${google_storage_bucket.dataflow.name}/temp"
+      DATAFLOW_WORKER_SA     = google_service_account.dataflow_worker.email
     }
   }
 }
@@ -114,6 +115,7 @@ resource "google_cloudfunctions2_function" "stations_trigger" {
       BQ_DATASET               = var.bq_dataset
       STATIONS_TEMPLATE_IMAGE  = "gs://${google_storage_bucket.dataflow.name}/templates/bicing_stations.json"
       DATAFLOW_TEMP_LOCATION   = "gs://${google_storage_bucket.dataflow.name}/temp"
+      DATAFLOW_WORKER_SA       = google_service_account.dataflow_worker.email
       GBFS_DISCOVERY_URL       = "https://santiago.publicbikesystem.net/customer/gbfs/v3.0/gbfs.json"
     }
   }
