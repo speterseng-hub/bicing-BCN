@@ -4,7 +4,9 @@ import os
 from datetime import datetime, timezone
 
 import functions_framework
-from google.cloud import dataflow_v1beta3
+import google.auth
+import google.auth.transport.requests
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -13,36 +15,54 @@ REGION = os.environ.get("GCP_REGION", "southamerica-west1")
 BQ_DATASET = os.environ.get("BQ_DATASET", "bicing_analytics")
 TEMPLATE_IMAGE = os.environ["STATIONS_TEMPLATE_IMAGE"]
 TEMP_GCS_LOCATION = os.environ["DATAFLOW_TEMP_LOCATION"]
+DATAFLOW_WORKER_SA = os.environ["DATAFLOW_WORKER_SA"]
 GBFS_DISCOVERY_URL = os.environ.get(
     "GBFS_DISCOVERY_URL",
     "https://santiago.publicbikesystem.net/customer/gbfs/v3.0/gbfs.json",
 )
 
 
+def _launch_flex_template(job_name: str) -> str:
+    credentials, _ = google.auth.default(
+        scopes=["https://www.googleapis.com/auth/cloud-platform"]
+    )
+    credentials.refresh(google.auth.transport.requests.Request())
+
+    url = (
+        f"https://dataflow.googleapis.com/v1b3/projects/{PROJECT_ID}"
+        f"/locations/{REGION}/flexTemplates:launch"
+    )
+    body = {
+        "launchParameter": {
+            "jobName": job_name,
+            "containerSpecGcsPath": TEMPLATE_IMAGE,
+            "parameters": {
+                "project": PROJECT_ID,
+                "bq_dataset": BQ_DATASET,
+                "discovery_url": GBFS_DISCOVERY_URL,
+            },
+            "environment": {
+                "tempLocation": TEMP_GCS_LOCATION,
+                "stagingLocation": TEMP_GCS_LOCATION.rstrip("/") + "/staging",
+                "serviceAccountEmail": DATAFLOW_WORKER_SA,
+            },
+        }
+    }
+    headers = {
+        "Authorization": f"Bearer {credentials.token}",
+        "Content-Type": "application/json",
+    }
+    resp = requests.post(url, json=body, headers=headers, timeout=30)
+    resp.raise_for_status()
+    return resp.json()["job"]["id"]
+
+
 @functions_framework.http
 def bicing_stations_trigger(request):
     job_name = f"bicing-stations-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}"
 
-    client = dataflow_v1beta3.FlexTemplatesServiceClient()
-    request_body = dataflow_v1beta3.LaunchFlexTemplateRequest(
-        project_id=PROJECT_ID,
-        location=REGION,
-        launch_parameter=dataflow_v1beta3.LaunchFlexTemplateParameter(
-            job_name=job_name,
-            container_spec_gcs_path=TEMPLATE_IMAGE,
-            parameters={
-                "project": PROJECT_ID,
-                "bq_dataset": BQ_DATASET,
-                "discovery_url": GBFS_DISCOVERY_URL,
-                "region": REGION,
-                "temp_location": TEMP_GCS_LOCATION,
-            },
-        ),
-    )
-
     try:
-        response = client.launch_flex_template(request=request_body)
-        job_id = response.job.id
+        job_id = _launch_flex_template(job_name)
         logger.info("Launched stations Dataflow job %s", job_id)
         return {"status": "ok", "job_id": job_id}, 200
     except Exception as exc:
