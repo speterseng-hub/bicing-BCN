@@ -72,6 +72,13 @@ resource "google_service_account" "etl_trigger" {
   display_name = "Bicing ETL Trigger — launches Dataflow Flex Template jobs"
 }
 
+# read Flex Template JSON from Dataflow bucket
+resource "google_storage_bucket_iam_member" "etl_trigger_template_reader" {
+  bucket = google_storage_bucket.dataflow.name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${google_service_account.etl_trigger.email}"
+}
+
 # launch Dataflow jobs
 resource "google_project_iam_member" "etl_trigger_dataflow_developer" {
   project = var.project_id
@@ -91,6 +98,14 @@ resource "google_service_account_iam_member" "etl_trigger_act_as_worker" {
 resource "google_service_account" "dataflow_worker" {
   account_id   = "bicing-dataflow-worker-sa"
   display_name = "Bicing Dataflow Worker — executes ETL pipelines"
+}
+
+# pull Docker images from Artifact Registry
+resource "google_artifact_registry_repository_iam_member" "dataflow_worker_registry_reader" {
+  location   = var.region
+  repository = google_artifact_registry_repository.dataflow.name
+  role       = "roles/artifactregistry.reader"
+  member     = "serviceAccount:${google_service_account.dataflow_worker.email}"
 }
 
 # read raw GCS files
