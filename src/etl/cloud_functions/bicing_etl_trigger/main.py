@@ -12,11 +12,12 @@ logger = logging.getLogger(__name__)
 
 PROJECT_ID = os.environ["GCP_PROJECT_ID"]
 REGION = os.environ.get("GCP_REGION", "southamerica-west1")
-RAW_BUCKET = os.environ.get("RAW_BUCKET", "proyecto-bicing-raw")
+RAW_BUCKET = os.environ.get("RAW_BUCKET", "")
 BQ_DATASET = os.environ.get("BQ_DATASET", "bicing_analytics")
 TEMPLATE_IMAGE = os.environ["ETL_TEMPLATE_IMAGE"]
 TEMP_GCS_LOCATION = os.environ["DATAFLOW_TEMP_LOCATION"]
 DATAFLOW_WORKER_SA = os.environ["DATAFLOW_WORKER_SA"]
+SDK_CONTAINER_IMAGE = os.environ["ETL_SDK_CONTAINER_IMAGE"]
 
 
 def _launch_flex_template(job_name: str, hour_str: str) -> str:
@@ -43,6 +44,7 @@ def _launch_flex_template(job_name: str, hour_str: str) -> str:
                 "tempLocation": TEMP_GCS_LOCATION,
                 "stagingLocation": TEMP_GCS_LOCATION.rstrip("/") + "/staging",
                 "serviceAccountEmail": DATAFLOW_WORKER_SA,
+                "sdkContainerImage": SDK_CONTAINER_IMAGE,
             },
         }
     }

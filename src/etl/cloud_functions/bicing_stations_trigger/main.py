@@ -16,6 +16,7 @@ BQ_DATASET = os.environ.get("BQ_DATASET", "bicing_analytics")
 TEMPLATE_IMAGE = os.environ["STATIONS_TEMPLATE_IMAGE"]
 TEMP_GCS_LOCATION = os.environ["DATAFLOW_TEMP_LOCATION"]
 DATAFLOW_WORKER_SA = os.environ["DATAFLOW_WORKER_SA"]
+SDK_CONTAINER_IMAGE = os.environ["STATIONS_SDK_CONTAINER_IMAGE"]
 GBFS_DISCOVERY_URL = os.environ.get(
     "GBFS_DISCOVERY_URL",
     "https://santiago.publicbikesystem.net/customer/gbfs/v3.0/gbfs.json",
@@ -45,6 +46,7 @@ def _launch_flex_template(job_name: str) -> str:
                 "tempLocation": TEMP_GCS_LOCATION,
                 "stagingLocation": TEMP_GCS_LOCATION.rstrip("/") + "/staging",
                 "serviceAccountEmail": DATAFLOW_WORKER_SA,
+                "sdkContainerImage": SDK_CONTAINER_IMAGE,
             },
         }
     }

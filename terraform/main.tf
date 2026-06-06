@@ -13,8 +13,11 @@ terraform {
   #   gcloud storage buckets create gs://<YOUR_PROJECT_ID>-tfstate \
   #     --location=southamerica-west1 --uniform-bucket-level-access
   # Then replace YOUR_PROJECT_ID below.
+  # Replace YOUR_PROJECT_ID with your actual GCP project ID before running terraform init.
+  # Create the bucket first: gcloud storage buckets create gs://YOUR_PROJECT_ID-tfstate \
+  #   --location=southamerica-west1 --uniform-bucket-level-access
   backend "gcs" {
-    bucket = "elite-coral-496815-s5-tfstate"
+    bucket = "YOUR_PROJECT_ID-tfstate"
     prefix = "bicing/state"
   }
 }

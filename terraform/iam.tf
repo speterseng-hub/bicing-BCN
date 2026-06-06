@@ -122,11 +122,18 @@ resource "google_storage_bucket_iam_member" "dataflow_worker_staging" {
   member = "serviceAccount:${google_service_account.dataflow_worker.email}"
 }
 
-# write to BigQuery
+# write to BigQuery tables
 resource "google_bigquery_dataset_iam_member" "dataflow_worker_bq" {
   dataset_id = google_bigquery_dataset.analytics.dataset_id
   role       = "roles/bigquery.dataEditor"
   member     = "serviceAccount:${google_service_account.dataflow_worker.email}"
+}
+
+# create BigQuery load jobs (required for WriteToBigQuery FILE_LOADS method)
+resource "google_project_iam_member" "dataflow_worker_bq_job_user" {
+  project = var.project_id
+  role    = "roles/bigquery.jobUser"
+  member  = "serviceAccount:${google_service_account.dataflow_worker.email}"
 }
 
 # Dataflow worker needs Dataflow worker role

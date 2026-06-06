@@ -46,8 +46,8 @@ class TestGcsPrefixForHour:
 
     def test_bucket_name_in_prefix(self):
         hour_utc = datetime(2026, 5, 21, 12, 0, tzinfo=timezone.utc)
-        prefix = gcs_prefix_for_hour("proyecto-bicing-raw", hour_utc)
-        assert prefix.startswith("gs://proyecto-bicing-raw/")
+        prefix = gcs_prefix_for_hour("test-bucket", hour_utc)
+        assert prefix.startswith("gs://test-bucket/")
 
 
 # ── parse_payload ─────────────────────────────────────────────────────────────

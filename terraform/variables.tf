@@ -12,7 +12,6 @@ variable "region" {
 variable "raw_bucket_name" {
   description = "GCS bucket for raw Bicing data"
   type        = string
-  default     = "proyecto-bicing-raw"
 }
 
 variable "cf_source_bucket_name" {

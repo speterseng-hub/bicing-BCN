@@ -75,9 +75,10 @@ resource "google_cloudfunctions2_function" "etl_trigger" {
       GCP_REGION            = var.region
       RAW_BUCKET            = var.raw_bucket_name
       BQ_DATASET            = var.bq_dataset
-      ETL_TEMPLATE_IMAGE     = "gs://${google_storage_bucket.dataflow.name}/templates/bicing_etl.json"
-      DATAFLOW_TEMP_LOCATION = "gs://${google_storage_bucket.dataflow.name}/temp"
-      DATAFLOW_WORKER_SA     = google_service_account.dataflow_worker.email
+      ETL_TEMPLATE_IMAGE      = "gs://${google_storage_bucket.dataflow.name}/templates/bicing_etl.json"
+      ETL_SDK_CONTAINER_IMAGE = "${var.region}-docker.pkg.dev/${var.project_id}/bicing-dataflow/bicing-etl:latest"
+      DATAFLOW_TEMP_LOCATION  = "gs://${google_storage_bucket.dataflow.name}/temp"
+      DATAFLOW_WORKER_SA      = google_service_account.dataflow_worker.email
     }
   }
 }
@@ -113,9 +114,10 @@ resource "google_cloudfunctions2_function" "stations_trigger" {
       GCP_PROJECT_ID           = var.project_id
       GCP_REGION               = var.region
       BQ_DATASET               = var.bq_dataset
-      STATIONS_TEMPLATE_IMAGE  = "gs://${google_storage_bucket.dataflow.name}/templates/bicing_stations.json"
-      DATAFLOW_TEMP_LOCATION   = "gs://${google_storage_bucket.dataflow.name}/temp"
-      DATAFLOW_WORKER_SA       = google_service_account.dataflow_worker.email
+      STATIONS_TEMPLATE_IMAGE      = "gs://${google_storage_bucket.dataflow.name}/templates/bicing_stations.json"
+      STATIONS_SDK_CONTAINER_IMAGE = "${var.region}-docker.pkg.dev/${var.project_id}/bicing-dataflow/bicing-stations:latest"
+      DATAFLOW_TEMP_LOCATION       = "gs://${google_storage_bucket.dataflow.name}/temp"
+      DATAFLOW_WORKER_SA           = google_service_account.dataflow_worker.email
       GBFS_DISCOVERY_URL       = "https://santiago.publicbikesystem.net/customer/gbfs/v3.0/gbfs.json"
     }
   }

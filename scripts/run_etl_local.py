@@ -6,9 +6,10 @@ Useful for validating the pipeline logic before deploying as a Flex Template.
 
 Usage:
     python scripts/run_etl_local.py \
-        --project elite-coral-496815-s5 \
-        --bucket proyecto-bicing-raw \
+        --project YOUR_PROJECT_ID \
+        --bucket your-raw-bucket-name \
         --bq_dataset bicing_analytics \
+        --temp_location gs://your-bucket/tmp \
         --hour_utc 2026-05-21T03
 
 To avoid writing to the real BQ table during testing, point to a test dataset:
@@ -27,7 +28,5 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     if not any(a.startswith("--runner") for a in args):
         args = ["--runner=DirectRunner"] + args
-    if not any(a.startswith("--temp_location") for a in args):
-        args += ["--temp_location=gs://elite-coral-496815-s5-dataflow/temp"]
 
     run(args)

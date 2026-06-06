@@ -10,7 +10,7 @@ from google.cloud import storage
 
 logger = logging.getLogger(__name__)
 
-RAW_BUCKET = os.environ.get("RAW_BUCKET", "proyecto-bicing-raw")
+RAW_BUCKET = os.environ.get("RAW_BUCKET", "")
 LOCAL_TZ = ZoneInfo("America/Santiago")
 
 

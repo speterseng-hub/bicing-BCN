@@ -18,7 +18,7 @@ Pub/Sub: bicing-raw-data           ← decoupled messaging + dead-letter
 Cloud Function: bicing_writer      ← writes raw JSON to GCS
      │
      ▼
-Cloud Storage: proyecto-bicing-raw
+Cloud Storage: your-raw-bucket-name
      │
      ▼
 BigQuery: bicing_analytics         ← queryable warehouse
@@ -89,20 +89,20 @@ Both pipelines use `DirectRunner` for local execution and write directly to BigQ
 ```bash
 python src/etl/dataflow/bicing_stations/main.py \
   --project=YOUR_PROJECT_ID \
-  --bucket=proyecto-bicing-raw \
+  --bucket=your-raw-bucket-name \
   --bq_dataset=bicing_analytics \
   --runner=DirectRunner \
-  --temp_location=gs://proyecto-bicing-raw/tmp
+  --temp_location=gs://your-raw-bucket-name/tmp
 ```
 
 **Hourly availability** (processes one UTC hour of GCS files):
 ```bash
 python src/etl/dataflow/bicing_etl/main.py \
   --project=YOUR_PROJECT_ID \
-  --bucket=proyecto-bicing-raw \
+  --bucket=your-raw-bucket-name \
   --bq_dataset=bicing_analytics \
   --runner=DirectRunner \
-  --temp_location=gs://proyecto-bicing-raw/tmp \
+  --temp_location=gs://your-raw-bucket-name/tmp \
   --hour_utc=2026-06-01T03
 ```
 

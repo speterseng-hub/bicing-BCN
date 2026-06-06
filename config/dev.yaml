@@ -2,7 +2,7 @@ project_id: YOUR_PROJECT_ID
 region: southamerica-west1
 
 gcs:
-  raw_bucket: proyecto-bicing-raw
+  raw_bucket: your-raw-bucket-name
   cf_source_bucket: YOUR_PROJECT_ID-cf-source
 
 pubsub:

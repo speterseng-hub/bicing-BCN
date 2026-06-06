@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT="elite-coral-496815-s5"
-REGION="southamerica-west1"
+PROJECT="${GCP_PROJECT_ID:?GCP_PROJECT_ID env var is required}"
+REGION="${GCP_REGION:-southamerica-west1}"
 REGISTRY="${REGION}-docker.pkg.dev/${PROJECT}/bicing-dataflow"
 BUCKET="gs://${PROJECT}-dataflow"
 

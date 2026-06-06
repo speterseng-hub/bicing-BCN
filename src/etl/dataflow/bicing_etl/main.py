@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 
 import apache_beam as beam
 from apache_beam.io.gcp.bigquery import BigQueryDisposition, WriteToBigQuery
-from apache_beam.options.pipeline_options import PipelineOptions, StandardOptions
+from apache_beam.options.pipeline_options import GoogleCloudOptions, PipelineOptions, StandardOptions
 
 logger = logging.getLogger(__name__)
 
@@ -95,14 +95,16 @@ class ListGCSFiles(beam.DoFn):
     """Receives a GCS prefix and emits one path per matching object."""
 
     def process(self, prefix):
+        import logging
         from apache_beam.io.gcp import gcsio
+        _logger = logging.getLogger(__name__)
         gcs = gcsio.GcsIO()
         try:
             files = list(gcs.list_prefix(prefix).keys())
         except Exception:
             files = []
         if not files:
-            logger.warning("No files found at %s", prefix)
+            _logger.warning("No files found at %s", prefix)
         yield from files
 
 
@@ -110,20 +112,28 @@ class ParseGCSFile(beam.DoFn):
     """Reads one GCS JSON file and emits one BQ row per station."""
 
     def process(self, gcs_path):
+        import json
+        import logging
+        import sys
         from apache_beam.io.gcp import gcsio
+        _logger = logging.getLogger(__name__)
+
+        if "/template" not in sys.path:
+            sys.path.insert(0, "/template")
+        from main import parse_payload as _parse_payload
+
         gcs = gcsio.GcsIO()
         try:
             with gcs.open(gcs_path) as f:
                 payload = json.load(f)
         except Exception as exc:
-            logger.error("Failed to read %s: %s", gcs_path, exc)
+            _logger.error("Failed to read %s: %s", gcs_path, exc)
             return
-        yield from parse_payload(payload)
+        yield from _parse_payload(payload)
 
 
 def run(argv=None):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--project", required=True)
     parser.add_argument("--bucket", required=True, help="Raw GCS bucket name (no gs:// prefix)")
     parser.add_argument("--bq_dataset", required=True)
     parser.add_argument(
@@ -140,12 +150,13 @@ def run(argv=None):
         hour_utc = now.replace(minute=0, second=0, microsecond=0) - timedelta(hours=1)
 
     prefix = gcs_prefix_for_hour(known_args.bucket, hour_utc)
-    bq_table = f"{known_args.project}:{known_args.bq_dataset}.bicing_raw"
 
     options = PipelineOptions(pipeline_args)
     options.view_as(StandardOptions).runner = (
         options.view_as(StandardOptions).runner or "DataflowRunner"
     )
+    project = options.view_as(GoogleCloudOptions).project
+    bq_table = f"{project}:{known_args.bq_dataset}.bicing_raw"
 
     with beam.Pipeline(options=options) as p:
         (

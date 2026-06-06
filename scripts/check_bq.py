@@ -1,6 +1,9 @@
+import os
+
 from google.cloud import bigquery
 
-client = bigquery.Client(project="elite-coral-496815-s5")
+project = os.environ.get("GCP_PROJECT_ID") or exit("Set GCP_PROJECT_ID env var")
+client = bigquery.Client(project=project)
 result = list(client.query(
     "SELECT COUNT(*) as filas, MIN(timestamp) as desde, MAX(timestamp) as hasta "
     "FROM bicing_analytics.bicing_raw"

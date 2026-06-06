@@ -1,6 +1,6 @@
 project_id            = "your-gcp-project-id"
 region                = "southamerica-west1"
-raw_bucket_name       = "proyecto-bicing-raw"
+raw_bucket_name       = "your-raw-bucket-name"
 cf_source_bucket_name = "your-gcp-project-id-cf-source"
 pubsub_topic          = "bicing-raw-data"
 bq_dataset            = "bicing_analytics"

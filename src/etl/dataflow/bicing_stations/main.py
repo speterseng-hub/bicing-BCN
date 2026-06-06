@@ -43,10 +43,18 @@ class FetchStations(beam.DoFn):
         self._discovery_url = discovery_url
 
     def process(self, _):
+        import logging
+        import sys
+        _logger = logging.getLogger(__name__)
+
+        if "/template" not in sys.path:
+            sys.path.insert(0, "/template")
+        from main import _fetch_stations as _fetch
+
         try:
-            stations = _fetch_stations(self._discovery_url)
+            stations = _fetch(self._discovery_url)
         except Exception as exc:
-            logger.error("Failed to fetch station_information: %s", exc)
+            _logger.error("Failed to fetch station_information: %s", exc)
             return
 
         for s in stations:
