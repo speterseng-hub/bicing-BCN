@@ -1,8 +1,8 @@
-"""Dataflow Flex Template: reads hourly GCS files and loads into BigQuery bicing_raw."""
+"""Dataflow Flex Template: reads daily GCS files and loads into BigQuery bicing_raw."""
 import argparse
 import json
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 import apache_beam as beam
@@ -36,10 +36,10 @@ BQ_SCHEMA = {
 }
 
 
-def gcs_prefix_for_hour(bucket: str, hour_utc: datetime) -> str:
-    """Return the GCS prefix for a given UTC hour using America/Santiago local time."""
-    local = hour_utc.astimezone(LOCAL_TZ)
-    return f"gs://{bucket}/bicing/{local.strftime('%Y/%m/%d/%H')}/"
+def gcs_prefixes_for_date(bucket: str, local_date: date) -> list[str]:
+    """Return the 24 GCS prefixes for a given America/Santiago local date."""
+    base = local_date.strftime("%Y/%m/%d")
+    return [f"gs://{bucket}/bicing/{base}/{h:02d}/" for h in range(24)]
 
 
 def parse_payload(payload: dict) -> list[dict]:
@@ -137,19 +137,18 @@ def run(argv=None):
     parser.add_argument("--bucket", required=True, help="Raw GCS bucket name (no gs:// prefix)")
     parser.add_argument("--bq_dataset", required=True)
     parser.add_argument(
-        "--hour_utc",
+        "--date",
         required=False,
-        help="ISO hour to process e.g. 2026-05-21T03 (UTC). Defaults to previous hour.",
+        help="Date to process in America/Santiago local time e.g. 2026-05-21. Defaults to yesterday.",
     )
     known_args, pipeline_args = parser.parse_known_args(argv)
 
-    if known_args.hour_utc:
-        hour_utc = datetime.fromisoformat(known_args.hour_utc).replace(tzinfo=timezone.utc)
+    if known_args.date:
+        local_date = date.fromisoformat(known_args.date)
     else:
-        now = datetime.now(timezone.utc)
-        hour_utc = now.replace(minute=0, second=0, microsecond=0) - timedelta(hours=1)
+        local_date = (datetime.now(LOCAL_TZ) - timedelta(days=1)).date()
 
-    prefix = gcs_prefix_for_hour(known_args.bucket, hour_utc)
+    prefixes = gcs_prefixes_for_date(known_args.bucket, local_date)
 
     options = PipelineOptions(pipeline_args)
     options.view_as(StandardOptions).runner = (
@@ -161,10 +160,10 @@ def run(argv=None):
     with beam.Pipeline(options=options) as p:
         (
             p
-            | "CreatePrefix" >> beam.Create([prefix])
-            | "ListFiles"    >> beam.ParDo(ListGCSFiles())
-            | "ParseFiles"   >> beam.ParDo(ParseGCSFile())
-            | "WriteToBQ"    >> WriteToBigQuery(
+            | "CreatePrefixes" >> beam.Create(prefixes)
+            | "ListFiles"      >> beam.ParDo(ListGCSFiles())
+            | "ParseFiles"     >> beam.ParDo(ParseGCSFile())
+            | "WriteToBQ"      >> WriteToBigQuery(
                 bq_table,
                 schema=BQ_SCHEMA,
                 write_disposition=BigQueryDisposition.WRITE_APPEND,

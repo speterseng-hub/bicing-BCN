@@ -123,14 +123,14 @@ resource "google_cloudfunctions2_function" "stations_trigger" {
   }
 }
 
-# ── Cloud Scheduler — hourly ETL trigger ──────────────────────────────────────
+# ── Cloud Scheduler — daily ETL trigger ───────────────────────────────────────
 
 resource "google_cloud_scheduler_job" "etl_trigger" {
   name             = "bicing-etl-trigger"
-  description      = "Triggers bicing_etl Dataflow job every hour"
+  description      = "Triggers bicing_etl Dataflow job once a day at 08:00 Santiago time"
   region           = var.scheduler_region
-  schedule         = "5 * * * *"
-  time_zone        = "UTC"
+  schedule         = "0 8 * * *"
+  time_zone        = "America/Santiago"
   attempt_deadline = "30s"
 
   retry_config {

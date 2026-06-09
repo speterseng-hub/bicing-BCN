@@ -1,8 +1,8 @@
-from datetime import datetime, timezone, timedelta
+from datetime import date, datetime, timezone, timedelta
 
 import pytest
 
-from src.etl.dataflow.bicing_etl.main import gcs_prefix_for_hour, parse_payload
+from src.etl.dataflow.bicing_etl.main import gcs_prefixes_for_date, parse_payload
 
 
 # ── fixtures ──────────────────────────────────────────────────────────────────
@@ -29,25 +29,21 @@ def make_station(**overrides) -> dict:
     return {**base, **overrides}
 
 
-# ── gcs_prefix_for_hour ───────────────────────────────────────────────────────
+# ── gcs_prefixes_for_date ─────────────────────────────────────────────────────
 
-class TestGcsPrefixForHour:
-    def test_converts_utc_to_santiago(self):
-        # 03:00 UTC = 23:00 Santiago (UTC-4 in May)
-        hour_utc = datetime(2026, 5, 21, 3, 0, tzinfo=timezone.utc)
-        prefix = gcs_prefix_for_hour("my-bucket", hour_utc)
-        assert prefix == "gs://my-bucket/bicing/2026/05/20/23/"
+class TestGcsPrefixesForDate:
+    def test_returns_24_prefixes(self):
+        prefixes = gcs_prefixes_for_date("my-bucket", date(2026, 5, 21))
+        assert len(prefixes) == 24
 
-    def test_midnight_utc_stays_same_day_in_santiago(self):
-        # 04:00 UTC = 00:00 Santiago (UTC-4 in May)
-        hour_utc = datetime(2026, 5, 21, 4, 0, tzinfo=timezone.utc)
-        prefix = gcs_prefix_for_hour("my-bucket", hour_utc)
-        assert prefix == "gs://my-bucket/bicing/2026/05/21/00/"
+    def test_prefixes_cover_all_hours(self):
+        prefixes = gcs_prefixes_for_date("my-bucket", date(2026, 5, 21))
+        for h in range(24):
+            assert f"gs://my-bucket/bicing/2026/05/21/{h:02d}/" in prefixes
 
-    def test_bucket_name_in_prefix(self):
-        hour_utc = datetime(2026, 5, 21, 12, 0, tzinfo=timezone.utc)
-        prefix = gcs_prefix_for_hour("test-bucket", hour_utc)
-        assert prefix.startswith("gs://test-bucket/")
+    def test_bucket_name_in_prefixes(self):
+        prefixes = gcs_prefixes_for_date("test-bucket", date(2026, 5, 21))
+        assert all(p.startswith("gs://test-bucket/") for p in prefixes)
 
 
 # ── parse_payload ─────────────────────────────────────────────────────────────

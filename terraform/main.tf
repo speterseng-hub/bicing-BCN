@@ -17,7 +17,7 @@ terraform {
   # Create the bucket first: gcloud storage buckets create gs://YOUR_PROJECT_ID-tfstate \
   #   --location=southamerica-west1 --uniform-bucket-level-access
   backend "gcs" {
-    bucket = "YOUR_PROJECT_ID-tfstate"
+    bucket = "elite-coral-496815-s5-tfstate"
     prefix = "bicing/state"
   }
 }

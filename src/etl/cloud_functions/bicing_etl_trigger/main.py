@@ -2,6 +2,7 @@
 import logging
 import os
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 import functions_framework
 import google.auth
@@ -19,8 +20,10 @@ TEMP_GCS_LOCATION = os.environ["DATAFLOW_TEMP_LOCATION"]
 DATAFLOW_WORKER_SA = os.environ["DATAFLOW_WORKER_SA"]
 SDK_CONTAINER_IMAGE = os.environ["ETL_SDK_CONTAINER_IMAGE"]
 
+LOCAL_TZ = ZoneInfo("America/Santiago")
 
-def _launch_flex_template(job_name: str, hour_str: str) -> str:
+
+def _launch_flex_template(job_name: str, date_str: str) -> str:
     credentials, _ = google.auth.default(
         scopes=["https://www.googleapis.com/auth/cloud-platform"]
     )
@@ -38,7 +41,7 @@ def _launch_flex_template(job_name: str, hour_str: str) -> str:
                 "project": PROJECT_ID,
                 "bucket": RAW_BUCKET,
                 "bq_dataset": BQ_DATASET,
-                "hour_utc": hour_str,
+                "date": date_str,
             },
             "environment": {
                 "tempLocation": TEMP_GCS_LOCATION,
@@ -59,15 +62,14 @@ def _launch_flex_template(job_name: str, hour_str: str) -> str:
 
 @functions_framework.http
 def bicing_etl_trigger(request):
-    now = datetime.now(timezone.utc)
-    hour_utc = now.replace(minute=0, second=0, microsecond=0) - timedelta(hours=1)
-    hour_str = hour_utc.strftime("%Y-%m-%dT%H")
+    yesterday = (datetime.now(LOCAL_TZ) - timedelta(days=1)).date()
+    date_str = yesterday.strftime("%Y-%m-%d")
     job_name = f"bicing-etl-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}"
 
     try:
-        job_id = _launch_flex_template(job_name, hour_str)
-        logger.info("Launched Dataflow job %s for hour %s", job_id, hour_str)
-        return {"status": "ok", "job_id": job_id, "hour_utc": hour_str}, 200
+        job_id = _launch_flex_template(job_name, date_str)
+        logger.info("Launched Dataflow job %s for date %s", job_id, date_str)
+        return {"status": "ok", "job_id": job_id, "date": date_str}, 200
     except Exception as exc:
         logger.error("Failed to launch Dataflow job: %s", exc)
         return {"error": str(exc)}, 500
