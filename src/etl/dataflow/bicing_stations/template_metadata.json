@@ -1,0 +1,24 @@
+{
+  "name": "bicing_stations",
+  "description": "Fetches GBFS station_information and loads into BigQuery bicing_stations.",
+  "parameters": [
+    {
+      "name": "project",
+      "label": "GCP project ID",
+      "helpText": "GCP project ID where Dataflow and BigQuery resources live.",
+      "isOptional": false
+    },
+    {
+      "name": "bq_dataset",
+      "label": "BigQuery dataset",
+      "helpText": "BigQuery dataset that contains the bicing_stations table.",
+      "isOptional": false
+    },
+    {
+      "name": "discovery_url",
+      "label": "GBFS discovery URL",
+      "helpText": "GBFS v3 discovery endpoint URL.",
+      "isOptional": true
+    }
+  ]
+}

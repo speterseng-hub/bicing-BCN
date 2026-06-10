@@ -1,0 +1,30 @@
+{
+  "name": "bicing_etl",
+  "description": "Reads daily GCS files and loads into BigQuery bicing_raw.",
+  "parameters": [
+    {
+      "name": "project",
+      "label": "GCP project ID",
+      "helpText": "GCP project ID where Dataflow and BigQuery resources live.",
+      "isOptional": false
+    },
+    {
+      "name": "bucket",
+      "label": "Raw GCS bucket name",
+      "helpText": "Raw GCS bucket name without the gs:// prefix.",
+      "isOptional": false
+    },
+    {
+      "name": "bq_dataset",
+      "label": "BigQuery dataset",
+      "helpText": "BigQuery dataset that contains the bicing_raw table.",
+      "isOptional": false
+    },
+    {
+      "name": "date",
+      "label": "Date to process",
+      "helpText": "Date to process in America/Santiago local time e.g. 2026-05-21. Defaults to yesterday.",
+      "isOptional": true
+    }
+  ]
+}

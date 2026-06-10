@@ -26,6 +26,7 @@ override.tf.json
 # GCP credentials — never commit
 *.json
 !config/*.json
+!src/etl/dataflow/**/template_metadata.json
 service_account*.json
 credentials*.json
 
